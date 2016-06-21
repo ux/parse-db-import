@@ -11,19 +11,31 @@ module Parse
           puts "Scanning....#{klass.name}"
           process_parse_file(file) do |record|
             columns = get_missing_columns(klass, record.keys)
+
             unless columns.empty?
               columns.each do |k|
-                missing_columns[k] = get_column_type(record[k], k)
+                type = get_column_type(record[k], k)
+
+                if type
+                  missing_columns[k] = type
+                else
+                  puts "Skipping column #{k} for table #{klass.table_name} because of undefined type\n"
+                end
               end
             end
             missing_columns.each do |k, v|
-              next unless v.is_a? Fixnum
-              len = record[k].to_s.length
-              missing_columns[k] = len if v < len
+              if v[0] == :integer && Array(record[k]).any? { |val| !(-2 ** 32 / 2 ... 2 ** 32 / 2).cover?(val) }
+                v[1] = (v[1] || {}).merge(limit: 8)
+              end
             end
           end
           if (missing_columns.length)
-            puts "Creating....#{klass.name} columns #{missing_columns.map{|k,v| "#{k} varchar(#{v})"}.join(", ")}"
+            columns_description = missing_columns.map do |k, v|
+              "#{k} #{v[0]}" + (v[1] ? "(#{v[1]})" : nil).to_s
+            end
+
+            puts "Creating....#{klass.name} columns #{columns_description.join(', ')}"
+
             create_missing_columns(klass, missing_columns)
           end
         end

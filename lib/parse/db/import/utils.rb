@@ -4,13 +4,20 @@ module Parse
   module Db
     class Import
 
-      DATE_CONVENTIONS = [ /At$/, /date$/, /^last/ ]
+      DATE_CONVENTIONS = [ /At$/, /date$/i ]
 
       def map_data_types(record)
-        #Convert arrays to strings, since we're not supporting them yet.
-        record.each { |k, v| record[k] = v.join(', ') if v.is_a? Array }
         #Convert epoch to datetime
-        record.each { |k, v| record[k] =  DateTime.strptime(v.to_s, "%Q") if is_date_by_naming_convention(k) }
+        record.each do |k, v|
+          next unless is_date_by_naming_convention(k)
+
+          begin
+            record[k] = DateTime.strptime(v.to_s, "%Q")
+          rescue => e
+            puts "Date will be lost due to invalid value: #{v}\n#{e}\n#{record.inspect}\n"
+            record[k] = nil
+          end
+        end
       end
 
       def is_date_by_naming_convention column_name

@@ -9,7 +9,8 @@ module Parse
           puts "Importing....#{klass.name}"
           process_parse_file(file) do |record|
             begin
-              klass.new(record).save!()
+              columns = klass.columns_hash.keys
+              klass.create!(record.select { |k, v| columns.include?(k) })
             rescue Exception
               puts record
               raise

@@ -50,16 +50,20 @@ module Parse
       end
 
       def get_column_type(val, column)
-        return :timestamp if is_date_by_naming_convention(column)
+        return [:timestamp] if is_date_by_naming_convention(column)
+
         case val
+          when Array
+            type, opts = get_column_type(val[0], column)
+            [type, (opts || {}).merge(array: true)]
           when String
-            val.length
+            [val.length > 128 ? :text : :string]
           when TrueClass, FalseClass
-            :boolean
+            [:boolean]
           when Float
-            :float
+            [:float]
           when Fixnum
-            :integer
+            [:integer]
         end
       end
 
@@ -70,11 +74,7 @@ module Parse
         dbconnection = klass.connection
         dbconnection.change_table(klass.table_name) do |t|
           missing_columns.each do |k,v|
-            if v.is_a? Fixnum
-              t.column k, :string, { limit: v }
-            else
-              t.column k, v
-            end
+            t.column k, *v
           end
         end
         klass.reset_column_information
@@ -83,4 +83,3 @@ module Parse
     end
   end
 end
-
