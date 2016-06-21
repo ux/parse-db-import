@@ -5,7 +5,7 @@ module Parse
   module Db
     class Import
       def create_schema(options)
-        Dir["#{options.path}/#{options.entity}/data.json"].each do |file|
+        Dir["#{options.path}/#{options.entity}.json-chunks"].each do |file|
           missing_columns = {}
           klass = klass_from_file(file)
           puts "Scanning....#{klass.name}"
@@ -18,7 +18,7 @@ module Parse
             end
             missing_columns.each do |k, v|
               next unless v.is_a? Fixnum
-              len = record[k].to_s.length 
+              len = record[k].to_s.length
               missing_columns[k] = len if v < len
             end
           end
@@ -31,4 +31,3 @@ module Parse
     end
   end
 end
-

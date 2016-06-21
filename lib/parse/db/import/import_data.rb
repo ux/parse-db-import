@@ -4,7 +4,7 @@ module Parse
   module Db
     class Import
       def import_data(options)
-        Dir["#{options.path}/#{options.entity}/data.json"].each do |file|
+        Dir["#{options.path}/#{options.entity}.json-chunks"].each do |file|
           klass = klass_from_file(file)
           puts "Importing....#{klass.name}"
           process_parse_file(file) do |record|

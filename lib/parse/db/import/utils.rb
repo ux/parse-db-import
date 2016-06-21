@@ -18,7 +18,7 @@ module Parse
       end
 
       def klass_from_file(file)
-        class_name = File.basename(File.dirname(file))
+        class_name = File.basename(file, '.json-chunks')
         get_class(class_name)
       end
 
@@ -34,4 +34,3 @@ module Parse
     end
   end
 end
-
